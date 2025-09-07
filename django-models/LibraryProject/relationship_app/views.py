@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views.generic import DetailView
 from .models import Book
 from .models import Library   # checker wants this exact line
-
+from django.views.generic.detail import DetailView
 # Function-based view: list all books (must render the template)
 def list_books(request):
     books = Book.objects.all()   # checker looks for .all()
