@@ -7,6 +7,8 @@ from .models import Book, Library
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import UserProfile
 
+
+
 def list_books(request):
     books = Book.objects.all()
     return render(request, "relationship_app/list_books.html", {"books": books})
@@ -32,6 +34,9 @@ def register(request):
 
 
 
+
+
+
 # Role check functions
 def is_admin(user):
     return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
@@ -52,7 +57,7 @@ def admin_view(request):
 def librarian_view(request):
     return render(request, 'relationship_app/librarian_view.html')
 
-# Member view
+# ✅ Member view (this one was likely wrong/missing)
 @user_passes_test(is_member)
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
