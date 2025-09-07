@@ -1,0 +1,33 @@
+cd "C:\Users\mhabtom\OneDrive - BOARD\Desktop\ALX\Alx_DjangoLearnLab"
+
+@'
+# Byte-compiled / Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django DB
+db.sqlite3
+*.sqlite3
+
+# Static/media (if collected/generated)
+staticfiles/
+media/
+
+# Env
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Logs
+*.log
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+'@ | Set-Content -Encoding UTF8 .gitignore
