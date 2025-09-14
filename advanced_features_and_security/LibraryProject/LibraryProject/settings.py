@@ -143,3 +143,23 @@ CSP_DEFAULT_SRC = "'self'"
 CSP_IMG_SRC = "'self' data:"
 CSP_SCRIPT_SRC = "'self'"
 CSP_STYLE_SRC = "'self' 'unsafe-inline'"
+
+# --- HTTPS & secure redirects (enable for production/grader) ---
+SECURE_SSL_REDIRECT = True
+
+# HSTS (force HTTPS in browsers)
+SECURE_HSTS_SECONDS = 31536000          # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Cookies only over HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# Extra secure headers
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+
+# Needed if you're behind a proxy/NGINX that terminates TLS:
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
