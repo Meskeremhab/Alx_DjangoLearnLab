@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 from .models import CustomUser
 
-@admin.register(CustomUser)
+
 class CustomUserAdmin(UserAdmin):
     list_display = ("username", "email", "first_name", "last_name", "is_staff", "date_of_birth")
     fieldsets = (
@@ -21,3 +21,4 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ("username", "first_name", "last_name", "email")
     ordering = ("username",)
+admin.site.register(CustomUser, CustomUserAdmin)
