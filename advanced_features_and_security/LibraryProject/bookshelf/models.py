@@ -1,12 +1,12 @@
 # LibraryProject/bookshelf/models.py
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 def profile_upload_path(instance, filename):
     return f"users/{instance.pk or 'new'}/profile/{filename}"
 
-class CustomUserManager(UserManager):
+class CustomUserManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault("date_of_birth", extra_fields.get("date_of_birth"))
         extra_fields.setdefault("profile_photo", extra_fields.get("profile_photo"))
