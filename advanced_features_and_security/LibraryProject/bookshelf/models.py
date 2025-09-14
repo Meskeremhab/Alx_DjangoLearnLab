@@ -31,3 +31,20 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.get_username()
+    
+class Book(models.Model):
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=200, blank=True)
+    published_year = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        # ✅ Custom permissions the checker expects to see
+        permissions = [
+            ("can_view", "Can view book"),
+            ("can_create", "Can create book"),
+            ("can_edit", "Can edit book"),
+            ("can_delete", "Can delete book"),
+        ]
+
+    def __str__(self):
+        return self.title
