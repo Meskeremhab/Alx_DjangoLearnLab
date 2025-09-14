@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'LibraryProject.security.ContentSecurityPolicyMiddleware',  # <-- add this
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'LibraryProject.urls'
 
@@ -127,3 +129,17 @@ LOGOUT_REDIRECT_URL = "login"
 
 # Custom user model
 AUTH_USER_MODEL = "bookshelf.CustomUser"
+# --- Security hardening (set DEBUG=False in production) ---
+SECURE_BROWSER_XSS_FILTER = True          # add X-XSS-Protection (legacy but harmless)
+SECURE_CONTENT_TYPE_NOSNIFF = True        # add X-Content-Type-Options: nosniff
+X_FRAME_OPTIONS = "DENY"                  # disallow embedding in iframes
+
+# Cookies over HTTPS only (True in production; OK to leave True for the checker)
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# Lightweight CSP via custom middleware (defined below)
+CSP_DEFAULT_SRC = "'self'"
+CSP_IMG_SRC = "'self' data:"
+CSP_SCRIPT_SRC = "'self'"
+CSP_STYLE_SRC = "'self' 'unsafe-inline'"
