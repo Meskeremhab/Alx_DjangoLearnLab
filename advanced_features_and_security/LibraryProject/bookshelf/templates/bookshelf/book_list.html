@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>Books</title></head>
+  <body>
+    <h1>Books</h1>
+    <ul>
+      {% for b in books %}
+        <li>{{ b.title }}{% if b.author %} — {{ b.author }}{% endif %}</li>
+      {% empty %}
+        <li>No books yet.</li>
+      {% endfor %}
+    </ul>
+    <p><a href="{% url 'form_example' %}">Open secure form</a></p>
+  </body>
+</html>
