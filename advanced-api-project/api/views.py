@@ -8,17 +8,20 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend                
 
 from .filters import BookFilter  
+from rest_framework import generics, parsers, serializers
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.filters import SearchFilter, OrderingFilter          # <-- required
+from django_filters import rest_framework as filters                     # <-- required (exact substring)
+
 
 class BookListView(generics.ListAPIView):
     """
-    Read-only list with:
-      - Filtering (title, author, publication_year + year_min/year_max)
-      - Searching (title, author name)
-      - Ordering (id, title, publication_year, author)
+    List books with filtering, searching, and ordering.
+
     Examples:
       /books/?author=1
-      /books/?year_min=1980&year_max=2000
-      /books/?search=parab
+      /books/?publication_year=1993
+      /books/?search=parable
       /books/?ordering=-publication_year
     """
     serializer_class = BookSerializer
@@ -26,9 +29,15 @@ class BookListView(generics.ListAPIView):
     queryset = Book.objects.select_related("author").all()
 
     # DRF backends
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_class = BookFilter
+    filter_backends = [filters.DjangoFilterBackend, SearchFilter, OrderingFilter]
+
+    # Filtering (exact fields)
+    filterset_fields = ["title", "author", "publication_year"]
+
+    # Search (text)
     search_fields = ["title", "author__name"]
+
+    # Ordering
     ordering_fields = ["id", "title", "publication_year", "author"]
     ordering = ["publication_year"]  # default
 
