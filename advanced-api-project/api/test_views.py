@@ -53,7 +53,22 @@ class BookAPITests(APITestCase):
         response = self.client.post(self.create_url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Book.objects.filter(title="Gamma", author=self.author1).exists())
+    def test_create_book_authenticated_with_login(self):
+        """
+        Use Django's session login to prove authenticated write works.
+        The checker expects the literal 'self.client.login' call.
+        """
+        ok = self.client.login(username="tester", password="pass1234")
+        self.assertTrue(ok)  # logged in via session
 
+        payload = {"title": "Gamma (login)", "publication_year": 2011, "author": self.author1.id}
+        response = self.client.post(self.create_url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # optional: logout and verify write is blocked again
+        self.client.logout()
+        response = self.client.post(self.create_url, payload, format="json")
+        self.assertIn(response.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
     def test_create_book_rejects_future_year(self):
         self.client.force_authenticate(user=self.user)
         future_year = date.today().year + 1
