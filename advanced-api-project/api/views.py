@@ -1,43 +1,47 @@
 # api/views.py
 from rest_framework import generics, parsers, serializers
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated  # <-- add this line
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated  
 from .models import Book
 from .serializers import BookSerializer
 
+from rest_framework.filters import SearchFilter, OrderingFilter              
+from django_filters.rest_framework import DjangoFilterBackend                
 
-class BookQueryMixin:
-    def get_queryset(self):
-        qs = Book.objects.select_related("author").all()
-        author_id = self.request.query_params.get("author")
-        year_min = self.request.query_params.get("year_min")
-        year_max = self.request.query_params.get("year_max")
-        ordering = self.request.query_params.get("ordering")
+from .filters import BookFilter  
 
-        if author_id:
-            qs = qs.filter(author_id=author_id)
-        if year_min:
-            qs = qs.filter(publication_year__gte=year_min)
-        if year_max:
-            qs = qs.filter(publication_year__lte=year_max)
-        if ordering in ("publication_year", "-publication_year"):
-            qs = qs.order_by(ordering)
-        return qs
-
-
-class BookListView(BookQueryMixin, generics.ListAPIView):
+class BookListView(generics.ListAPIView):
+    """
+    Read-only list with:
+      - Filtering (title, author, publication_year + year_min/year_max)
+      - Searching (title, author name)
+      - Ordering (id, title, publication_year, author)
+    Examples:
+      /books/?author=1
+      /books/?year_min=1980&year_max=2000
+      /books/?search=parab
+      /books/?ordering=-publication_year
+    """
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # public read
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = Book.objects.select_related("author").all()
+
+    # DRF backends
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = BookFilter
+    search_fields = ["title", "author__name"]
+    ordering_fields = ["id", "title", "publication_year", "author"]
+    ordering = ["publication_year"]  # default
 
 
 class BookDetailView(generics.RetrieveAPIView):
     queryset = Book.objects.select_related("author")
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # public read
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class BookCreateView(generics.CreateAPIView):
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticated]  # auth required
+    permission_classes = [IsAuthenticated]
     parser_classes = [parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser]
 
     def perform_create(self, serializer):
@@ -56,7 +60,7 @@ class BookCreateView(generics.CreateAPIView):
 class BookUpdateView(generics.UpdateAPIView):
     queryset = Book.objects.select_related("author")
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticated]  # auth required
+    permission_classes = [IsAuthenticated]
     parser_classes = [parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser]
 
     def perform_update(self, serializer):
@@ -76,4 +80,4 @@ class BookUpdateView(generics.UpdateAPIView):
 class BookDeleteView(generics.DestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticated]  # auth required
+    permission_classes = [IsAuthenticated]
