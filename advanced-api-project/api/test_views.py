@@ -3,40 +3,38 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.test import TestCase
+from django.conf import settings
+from django.db import connection
 
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 
 from .models import Author, Book
 
 
-class BookAPITests(TestCase):
+class BookAPITests(APITestCase):
     """
-    Integration-style API tests for the Book endpoints.
+    DRF API tests for Book endpoints.
 
-    Endpoints under test (from api/urls.py):
-      - GET  /books/                       -> book-list
-      - GET  /books/<pk>/                  -> book-detail
-      - POST /books/create/                -> book-create        (auth required)
-      - PUT  /books/update/<pk>/           -> book-update        (auth required)
-      - DELETE /books/delete/<pk>/         -> book-delete        (auth required)
+    Endpoints (from api/urls.py):
+      - GET    /books/                    -> book-list         (public)
+      - GET    /books/<pk>/               -> book-detail       (public)
+      - POST   /books/create/             -> book-create       (auth)
+      - PUT    /books/update/<pk>/        -> book-update       (auth)
+      - DELETE /books/delete/<pk>/        -> book-delete       (auth)
 
-    Features under test:
-      - CRUD: create, retrieve, update, delete
-      - Permissions: public read, auth-only write
-      - Filtering: ?title=, ?author=, ?publication_year=
-      - Searching: ?search= across title and author__name
-      - Ordering:  ?ordering=title / -publication_year / etc.
+    Also tests filtering (?author=, ?publication_year=),
+    searching (?search= on title & author__name),
+    and ordering (?ordering=title / -publication_year).
     """
 
     @classmethod
     def setUpTestData(cls):
-        # Users
+        # users
         User = get_user_model()
         cls.user = User.objects.create_user(username="tester", password="pass1234")
 
-        # Authors + Books
+        # authors + books
         cls.author1 = Author.objects.create(name="Author One")
         cls.author2 = Author.objects.create(name="Author Two")
 
@@ -47,16 +45,11 @@ class BookAPITests(TestCase):
             title="Beta", publication_year=2000, author=cls.author2
         )
 
-        # URLs
+        # urls
         cls.list_url = reverse("book-list")
         cls.create_url = reverse("book-create")
 
-    def setUp(self):
-        self.client = APIClient()
-
-    # ----------------------
-    # READ (public allowed)
-    # ----------------------
+    # ---------- READ (public) ----------
     def test_list_books_public(self):
         res = self.client.get(self.list_url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -70,13 +63,10 @@ class BookAPITests(TestCase):
         self.assertEqual(res.data["id"], self.book1.id)
         self.assertEqual(res.data["title"], "Alpha")
 
-    # ----------------------
-    # CREATE (auth required)
-    # ----------------------
+    # ---------- CREATE (auth required) ----------
     def test_create_book_requires_auth(self):
         payload = {"title": "Gamma", "publication_year": 2010, "author": self.author1.id}
         res = self.client.post(self.create_url, payload, format="json")
-        # SessionAuth unauthenticated typically yields 403
         self.assertIn(res.status_code, (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN))
         self.assertFalse(Book.objects.filter(title="Gamma").exists())
 
@@ -96,17 +86,14 @@ class BookAPITests(TestCase):
         self.assertIn("publication_year", res.data)
 
     def test_create_book_duplicate_rule(self):
-        """Creating same (title, publication_year, author) should error (custom rule)."""
+        """Custom duplicate rule in perform_create should 400."""
         self.client.force_authenticate(user=self.user)
         payload = {"title": "Alpha", "publication_year": 1990, "author": self.author1.id}
         res = self.client.post(self.create_url, payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        # non_field_errors is what we raise in perform_create
         self.assertIn("non_field_errors", res.data)
 
-    # ----------------------
-    # UPDATE (auth required)
-    # ----------------------
+    # ---------- UPDATE (auth required) ----------
     def test_update_requires_auth(self):
         url = reverse("book-update", args=[self.book1.id])
         payload = {"title": "Alpha (Updated)", "publication_year": 1991, "author": self.author1.id}
@@ -125,9 +112,7 @@ class BookAPITests(TestCase):
         self.assertEqual(self.book1.title, "Alpha (Updated)")
         self.assertEqual(self.book1.publication_year, 1991)
 
-    # ----------------------
-    # DELETE (auth required)
-    # ----------------------
+    # ---------- DELETE (auth required) ----------
     def test_delete_requires_auth(self):
         url = reverse("book-delete", args=[self.book2.id])
         res = self.client.delete(url)
@@ -141,9 +126,7 @@ class BookAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Book.objects.filter(pk=self.book2.id).exists())
 
-    # ----------------------
-    # FILTERING / SEARCH / ORDER
-    # ----------------------
+    # ---------- FILTER / SEARCH / ORDER ----------
     def test_filter_by_author(self):
         res = self.client.get(f"{self.list_url}?author={self.author1.id}")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -172,6 +155,20 @@ class BookAPITests(TestCase):
     def test_ordering_desc_publication_year(self):
         res = self.client.get(f"{self.list_url}?ordering=-publication_year")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # Expect book2 (2000) before book1 (1990)
-        returned_ids = [b["id"] for b in res.data]
-        self.assertEqual(returned_ids[:2], [self.book2.id, self.book1.id])
+        ids = [b["id"] for b in res.data]
+        # expect 2000 before 1990
+        self.assertEqual(ids[:2], [self.book2.id, self.book1.id])
+
+
+class DatabaseIsolationTests(APITestCase):
+    """
+    Sanity check that tests run against a separate DB.
+    Django's test runner creates a temporary test database automatically.
+    """
+    def test_uses_test_database(self):
+        name = str(connection.settings_dict.get("NAME"))
+        default_name = str(settings.DATABASES["default"]["NAME"])
+        # Either a separate file (often prefixed with 'test_') or in-memory.
+        self.assertTrue(
+            name == ":memory:" or "test" in name.lower() or name != default_name
+        )
