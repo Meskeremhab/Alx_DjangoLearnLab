@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 URL configuration for django_blog project.
 
@@ -19,4 +20,13 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+=======
+
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('blog.urls')), 
+>>>>>>> 121d478 (Initial Setup and Project Configuration for a Django Blog)
 ]

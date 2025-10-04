@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 Django settings for django_blog project.
 
@@ -14,6 +15,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+=======
+
+from pathlib import Path
+
+>>>>>>> 121d478 (Initial Setup and Project Configuration for a Django Blog)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,7 +28,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+<<<<<<< HEAD
 SECRET_KEY = 'django-insecure-62uk3_i_7w=g!+b+9t(#y56kh)wot*s75ye_&5q9i!cvijd))u'
+=======
+SECRET_KEY = 'django-insecure-s=-=46$pz01kjll)4zdq^b+8p$%v=7k_b&&*!0y-9g6s!qunq@'
+>>>>>>> 121d478 (Initial Setup and Project Configuration for a Django Blog)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -54,6 +64,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django_blog.urls'
 
+<<<<<<< HEAD
 STATIC_URL = 'static/'
 TEMPLATES = [
     {
@@ -63,6 +74,15 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
+=======
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+>>>>>>> 121d478 (Initial Setup and Project Configuration for a Django Blog)
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
