@@ -1,15 +1,16 @@
-# blog/views.py
+
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import RegistrationForm, UserUpdateForm, ProfileForm
+from .models import Profile
 
 def register(request):
     if request.method == "POST":
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # log them in after sign-up
+            login(request, user)
             return redirect("profile")
     else:
         form = RegistrationForm()
@@ -17,20 +18,17 @@ def register(request):
 
 @login_required
 def profile(request):
+    if not hasattr(request.user, "profile"):
+        Profile.objects.create(user=request.user)
+
     if request.method == "POST":
         uform = UserUpdateForm(request.POST, instance=request.user)
-        pform = ProfileForm(request.POST, instance=getattr(request.user, "profile", None))
-        # ensure a profile exists
-        if not hasattr(request.user, "profile"):
-            from .models import Profile
-            Profile.objects.create(user=request.user)
-            pform = ProfileForm(request.POST, instance=request.user.profile)
-
+        pform = ProfileForm(request.POST, instance=request.user.profile)
         if uform.is_valid() and pform.is_valid():
             uform.save()
             pform.save()
             return redirect("profile")
     else:
         uform = UserUpdateForm(instance=request.user)
-        pform = ProfileForm(instance=getattr(request.user, "profile", None))
+        pform = ProfileForm(instance=request.user.profile)
     return render(request, "registration/profile.html", {"uform": uform, "pform": pform})

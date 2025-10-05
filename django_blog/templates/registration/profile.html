@@ -2,7 +2,6 @@
 {% block title %}Your Profile{% endblock %}
 {% block content %}
 <h1>Your Profile</h1>
-
 <form method="post" novalidate>
   {% csrf_token %}
   <fieldset>
@@ -13,7 +12,6 @@
       {{ uform.email.errors }}{{ uform.email }}
     </div>
   </fieldset>
-
   <fieldset>
     <legend>Profile</legend>
     {{ pform.non_field_errors }}
@@ -22,7 +20,6 @@
       {{ pform.bio.errors }}{{ pform.bio }}
     </div>
   </fieldset>
-
   <button type="submit">Save changes</button>
 </form>
 {% endblock %}

@@ -1,26 +1,30 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Register{% endblock %}
 {% block content %}
-<h1>Create your account</h1>
-<form method="post" novalidate>
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  <div>
-    <label>Username</label>
-    {{ form.username.errors }}{{ form.username }}
-  </div>
-  <div>
-    <label>Email</label>
-    {{ form.email.errors }}{{ form.email }}
-  </div>
-  <div>
-    <label>Password</label>
-    {{ form.password1.errors }}{{ form.password1 }}
-  </div>
-  <div>
-    <label>Confirm Password</label>
-    {{ form.password2.errors }}{{ form.password2 }}
-  </div>
-  <button type="submit">Sign up</button>
-</form>
+<link rel="stylesheet" href="{% static 'blog/register.css' %}">
+<div class="auth-container">
+  <h1>Create your account</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div>
+      <label>Username</label>
+      {{ form.username.errors }}{{ form.username }}
+    </div>
+    <div>
+      <label>Email</label>
+      {{ form.email.errors }}{{ form.email }}
+    </div>
+    <div>
+      <label>Password</label>
+      {{ form.password1.errors }}{{ form.password1 }}
+    </div>
+    <div>
+      <label>Confirm Password</label>
+      {{ form.password2.errors }}{{ form.password2 }}
+    </div>
+    <button type="submit">Sign up</button>
+  </form>
+</div>
 {% endblock %}
