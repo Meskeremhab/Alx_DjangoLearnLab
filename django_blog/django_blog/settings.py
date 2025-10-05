@@ -58,6 +58,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_blog.wsgi.application'
 
+LOGIN_REDIRECT_URL = "profile"
+LOGOUT_REDIRECT_URL = "login"
+LOGIN_URL = "login"  # ensures @login_required sends users to /login/
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
