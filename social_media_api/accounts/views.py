@@ -14,7 +14,11 @@ class FollowUserView(generics.GenericAPIView):
         target = get_object_or_404(User, id=user_id)
         if target == request.user:
             return Response({"detail": "You cannot follow yourself."}, status=400)
+       
+       
         request.user.following.add(target)
+
+
         return Response(
             {"detail": f"Now following {target.username}"},
             status=status.HTTP_200_OK

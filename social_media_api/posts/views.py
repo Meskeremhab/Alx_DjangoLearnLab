@@ -1,19 +1,28 @@
-from rest_framework import generics, permissions
-from .models import Post
-from .serializers import PostSerializer
+from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
+from .models import Post, Comment
+from .serializers import PostSerializer, CommentSerializer
+from .permissions import IsOwnerOrReadOnly
 
-class CreatePostView(generics.CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.select_related('author').all()
     serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    search_fields = ['title', 'content']
+    ordering_fields = ['created_at', 'updated_at', 'title']
+    filterset_fields = ['author']  # /?author=<id>
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-class FeedView(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PostSerializer
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.select_related('author', 'post').all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    search_fields = ['content']
+    ordering_fields = ['created_at', 'updated_at']
+    filterset_fields = ['post', 'author']  # /?post=<id>
 
-    def get_queryset(self):
-        # Posts from people I follow + my own posts
-        following_ids = self.request.user.following.values_list('id', flat=True)
-        return Post.objects.filter(author__in=list(following_ids) + [self.request.user.id]).order_by('-created_at')
+    def perform_create(self, serializer):
+        # Optional: ensure you can only comment on visible posts; basic version:
+        serializer.save(author=self.request.user)
