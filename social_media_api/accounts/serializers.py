@@ -4,8 +4,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
-
-class RegisterSerializer(serializers.ModelSerializer):
+class UserPublicSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -35,3 +34,12 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid credentials')
         data['user'] = user
         return data
+
+
+class FollowActionSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+
+    def validate_user_id(self, value):
+        if not User.objects.filter(id=value).exists():
+            raise serializers.ValidationError("User not found.")
+        return value

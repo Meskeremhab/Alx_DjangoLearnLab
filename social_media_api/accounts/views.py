@@ -1,37 +1,35 @@
-from rest_framework import generics, status, permissions
-from rest_framework.views import APIView
+from rest_framework import permissions, status, generics
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from .models import User
-from .serializers import (
-    RegisterSerializer, LoginSerializer, UserPublicSerializer
-)
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from .serializers import FollowActionSerializer, UserPublicSerializer
 
-class RegisterView(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = RegisterSerializer
+User = get_user_model()
 
-    def create(self, request, *args, **kwargs):
-        resp = super().create(request, *args, **kwargs)
-        user = User.objects.get(id=resp.data['id'])
-        token, _ = Token.objects.get_or_create(user=user)
+class FollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FollowActionSerializer
+
+    def post(self, request, user_id):
+        target = get_object_or_404(User, id=user_id)
+        if target == request.user:
+            return Response({"detail": "You cannot follow yourself."}, status=400)
+        request.user.following.add(target)
         return Response(
-            {'token': token.key, 'user': UserPublicSerializer(user).data},
-            status=status.HTTP_201_CREATED
+            {"detail": f"Now following {target.username}"},
+            status=status.HTTP_200_OK
         )
 
-class LoginView(APIView):
-    permission_classes = [permissions.AllowAny]
+class UnfollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FollowActionSerializer
 
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'user': UserPublicSerializer(user).data})
-
-class ProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserPublicSerializer
-
-    def get_object(self):
-        return self.request.user
+    def post(self, request, user_id):
+        target = get_object_or_404(User, id=user_id)
+        if target == request.user:
+            return Response({"detail": "You cannot unfollow yourself."}, status=400)
+        request.user.following.remove(target)
+        return Response(
+            {"detail": f"Unfollowed {target.username}"},
+            status=status.HTTP_200_OK
+        )
