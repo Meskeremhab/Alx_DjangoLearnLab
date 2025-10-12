@@ -3,18 +3,18 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import FollowActionSerializer, UserPublicSerializer
+CustomUser = get_user_model()
 
-User = get_user_model()
 
 class FollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FollowActionSerializer
 
     def post(self, request, user_id):
-        target = get_object_or_404(User, id=user_id)
+        target = get_object_or_404(CustomUser, id=user_id)
         if target == request.user:
             return Response({"detail": "You cannot follow yourself."}, status=400)
-       
+        CustomUser.objects.all()
        
         request.user.following.add(target)
 
@@ -29,9 +29,11 @@ class UnfollowUserView(generics.GenericAPIView):
     serializer_class = FollowActionSerializer
 
     def post(self, request, user_id):
-        target = get_object_or_404(User, id=user_id)
+        target = get_object_or_404(CustomUser, id=user_id)
         if target == request.user:
             return Response({"detail": "You cannot unfollow yourself."}, status=400)
+        CustomUser.objects.all()
+
         request.user.following.remove(target)
         return Response(
             {"detail": f"Unfollowed {target.username}"},
