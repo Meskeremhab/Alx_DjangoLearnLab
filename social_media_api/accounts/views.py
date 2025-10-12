@@ -3,8 +3,10 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import FollowActionSerializer, UserPublicSerializer
-CustomUser = get_user_model()
 
+from django.contrib.contenttypes.models import ContentType
+from notifications.models import Notification
+CustomUser = get_user_model()
 
 class FollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -18,11 +20,19 @@ class FollowUserView(generics.GenericAPIView):
        
         request.user.following.add(target)
 
-
+        Notification.objects.create(
+            recipient=target,
+            actor=request.user,
+            verb='started following you',
+            target_content_type=ContentType.objects.get_for_model(type(request.user)),
+            target_object_id=request.user.id,
+        )
         return Response(
             {"detail": f"Now following {target.username}"},
             status=status.HTTP_200_OK
         )
+    
+        
 
 class UnfollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -39,3 +49,4 @@ class UnfollowUserView(generics.GenericAPIView):
             {"detail": f"Unfollowed {target.username}"},
             status=status.HTTP_200_OK
         )
+

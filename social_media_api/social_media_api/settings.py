@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'accounts',
     'posts',
     'django_filters',
+    'notifications', 
+    'django.contrib.contenttypes'
 ]
 
 AUTH_USER_MODEL = 'accounts.User' 
